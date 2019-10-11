@@ -1,5 +1,7 @@
 package com.xiongxin.app.lexing;
 
+import java.util.Arrays;
+
 public class Lexer {
 
     public char[] input;
@@ -16,14 +18,21 @@ public class Lexer {
         readChar();
     }
 
-
-
     public Token nextToken() {
-        Token token;
+        Token token = new Token();
+
+        skipWhitespace();
 
         switch (ch) {
             case '=':
-                token = newToken(Token.ASSIGN, ch);
+                if (peekChar() == '=') {
+                    readChar();
+
+                    token.type = Token.EQ;
+                    token.literal = "==";
+                } else {
+                    token = newToken(Token.ASSIGN, ch);
+                }
                 break;
             case ';':
                 token = newToken(Token.SEMICOLON, ch);
@@ -46,13 +55,49 @@ public class Lexer {
             case '+':
                 token = newToken(Token.PLUS, ch);
                 break;
+            case '!':
+                if (peekChar() == '=') {
+                    readChar();
+                    token.type = Token.NOT_EQ;
+                    token.literal = "!=";
+                } else {
+                    token = newToken(Token.BANG, ch);
+                }
+                break;
+            case '-':
+                token = newToken(Token.MINUS, ch);
+                break;
+            case '/':
+                token = newToken(Token.SLASH, ch);
+                break;
+            case '*':
+                token = newToken(Token.ASTERISK, ch);
+                break;
+            case '<':
+                token = newToken(Token.LT, ch);
+                break;
+            case '>':
+                token = newToken(Token.GT, ch);
+                break;
             case Character.MIN_VALUE:
                 token = newToken(Token.EOF, Character.MIN_VALUE);
                 break;
             default:
-                token = newToken(Token.ILLEGAL, ch);
-        }
+                if ( Character.isLetter(ch) ) {
+                    token.literal = readIdentifier();
+                    token.type = Token.lookupIdent(token.literal);
 
+                    return token;
+                } else if ( Character.isDigit(ch) ) {
+                    token.literal = readNumber();
+                    token.type = Token.INT;
+
+                    return token;
+                } else {
+                    token = newToken(Token.ILLEGAL, ch);
+                }
+
+        }
 
         readChar();
 
@@ -72,5 +117,39 @@ public class Lexer {
 
         position = readPosition;
         readPosition += 1;
+    }
+
+    private void skipWhitespace() {
+        while (Character.isWhitespace(ch)) {
+            readChar();
+        }
+    }
+
+    private String readIdentifier() {
+        int currentPosition = position;
+
+        while ( Character.isLetter(ch) ) {
+            readChar();
+        }
+
+        return String.valueOf(Arrays.copyOfRange(input, currentPosition, position));
+    }
+
+    private String readNumber() {
+        int currentPosition = position;
+
+        while ( Character.isDigit(ch) ) {
+            readChar();
+        }
+
+        return String.valueOf(Arrays.copyOfRange(input, currentPosition, position));
+    }
+
+    private char peekChar() {
+        if ( readPosition >= input.length ) {
+            return Character.MIN_VALUE;
+        } else {
+            return input[readPosition];
+        }
     }
 }
