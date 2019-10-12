@@ -1,9 +1,8 @@
 package com.xiongxin.app;
 
-import com.xiongxin.app.lexing.Lexer;
-import com.xiongxin.app.lexing.Token;
+import com.xiongxin.app.lexer.Lexer;
+import com.xiongxin.app.lexer.Token;
 
-import java.util.Arrays;
 import java.util.Scanner;
 
 /**
@@ -21,7 +20,7 @@ public class App
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print(">>");
+        System.out.print(">> ");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             Lexer lexer = new Lexer(line);

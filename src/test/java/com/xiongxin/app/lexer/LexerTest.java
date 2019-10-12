@@ -1,4 +1,4 @@
-package com.xiongxin.app.lexing;
+package com.xiongxin.app.lexer;
 
 import org.junit.Test;
 
@@ -148,9 +148,8 @@ public class LexerTest
 
         tests.forEach( expected -> {
             Token token = lexer.nextToken();
-            System.out.println(token);
-            assertEquals("token equal 1", expected.expectedType , token.type );
-            assertEquals("token equal 2", expected.expectLiteral, token.literal );
+            assertEquals("token equal: " + token.type, expected.expectedType , token.type );
+            assertEquals("literal equal: " + token.literal, expected.expectLiteral, token.literal );
         });
     }
 }

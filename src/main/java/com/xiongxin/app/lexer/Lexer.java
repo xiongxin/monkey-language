@@ -1,4 +1,4 @@
-package com.xiongxin.app.lexing;
+package com.xiongxin.app.lexer;
 
 import java.util.Arrays;
 
