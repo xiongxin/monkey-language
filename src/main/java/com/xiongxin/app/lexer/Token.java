@@ -5,43 +5,43 @@ import java.util.Map;
 
 public class Token {
 
-    public static String ILLEGAL = "ILLEGAL";
-    public static String EOF = "EOF";
+    public final static String ILLEGAL = "ILLEGAL";
+    public final static String EOF = "EOF";
     // Identifiers + literals
-    public static String IDENT = "IDENT";
-    public static String INT = "INT";
+    public final static String IDENT = "IDENT";
+    public final static String INT = "INT";
 
     // Operators
-    public static String ASSIGN = "=";
-    public static String PLUS = "+";
-    public static String MINUS = "-";
-    public static String BANG = "!";
-    public static String ASTERISK = "*";
-    public static String SLASH = "/";
+    public final static String ASSIGN = "=";
+    public final static String PLUS = "+";
+    public final static String MINUS = "-";
+    public final static String BANG = "!";
+    public final static String ASTERISK = "*";
+    public final static String SLASH = "/";
 
-    public static String LT = "<";
-    public static String GT = ">";
+    public final static String LT = "<";
+    public final static String GT = ">";
 
     // Delimiters
-    public static String COMMA = ",";
-    public static String SEMICOLON = ";";
+    public final static String COMMA = ",";
+    public final static String SEMICOLON = ";";
 
-    public static String LPAREN = "(";
-    public static String RPAREN = ")";
-    public static String LBRACE = "{";
-    public static String RBARCE = "}";
+    public final static String LPAREN = "(";
+    public final static String RPAREN = ")";
+    public final static String LBRACE = "{";
+    public final static String RBARCE = "}";
 
     // keywords
-    public static String FUNCTION = "FUNCTION";
-    public static String LET = "LET";
-    public static String TRUE = "TRUE";
-    public static String FALSE = "FALSE";
-    public static String IF = "IF";
-    public static String ELSE = "ELSE";
-    public static String RETURN = "RETURN";
+    public final static String FUNCTION = "FUNCTION";
+    public final static String LET = "LET";
+    public final static String TRUE = "TRUE";
+    public final static String FALSE = "FALSE";
+    public final static String IF = "IF";
+    public final static String ELSE = "ELSE";
+    public final static String RETURN = "RETURN";
 
-    public static String EQ = "==";
-    public static String NOT_EQ = "!=";
+    public final static String EQ = "==";
+    public final static String NOT_EQ = "!=";
 
     public String type;
     public String literal;

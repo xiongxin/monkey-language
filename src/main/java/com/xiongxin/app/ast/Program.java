@@ -1,17 +1,20 @@
 package com.xiongxin.app.ast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Root node of ast
  */
 public class Program implements Node {
 
-    public Statement[] statements;
+    public List<Statement> statements = new ArrayList<>();
 
 
     @Override
     public String tokenLiteral() {
-        if (statements.length > 0) {
-            return statements[0].tokenLiteral();
+        if (statements.size() > 0) {
+            return statements.get(0).tokenLiteral();
         } else {
             return "";
         }

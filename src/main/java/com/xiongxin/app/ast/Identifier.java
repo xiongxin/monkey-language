@@ -15,4 +15,9 @@ public class Identifier implements Expression {
     public String tokenLiteral() {
         return token.literal;
     }
+
+    public Identifier(Token token, String value) {
+        this.token = token;
+        this.value = value;
+    }
 }
