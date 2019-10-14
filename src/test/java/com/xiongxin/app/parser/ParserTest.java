@@ -1,8 +1,6 @@
 package com.xiongxin.app.parser;
 
-import com.xiongxin.app.ast.LetStatement;
-import com.xiongxin.app.ast.Program;
-import com.xiongxin.app.ast.ReturnStatement;
+import com.xiongxin.app.ast.*;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
 import org.junit.Test;
@@ -62,5 +60,48 @@ public class ParserTest {
         program.statements.forEach(statement -> {
             assertEquals(((ReturnStatement)statement).token.type, Token.RETURN);
         });
+    }
+
+    @Test
+    public void testIdentifierExpression() {
+        String input = "foobar";
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+
+        checkParserError(parser);
+
+        assertEquals("statement len", 1, program.statements.size());
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+
+        Identifier identifier = (Identifier) statement.expression;
+
+        assertEquals("identifier value", "foobar", identifier.value);
+
+    }
+
+
+    @Test
+    public void testIntegerExpression() {
+        String input = "11";
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+
+        checkParserError(parser);
+
+        assertEquals("statement length", 1, program.statements.size());
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        IntegerLiteral integerLiteral = (IntegerLiteral) statement.expression;
+
+        assertEquals("integer value", new Integer(11), integerLiteral.value);
+    }
+
+    @Test
+    public void testPrecedencs() {
+        Parser.Precedence precedence1 = Parser.Precedence.LOWEST;
+        Parser.Precedence precedence2 = Parser.Precedence.CALL;
+        System.out.println( precedence1.name());
+        System.out.println(precedence2.ordinal());
     }
 }

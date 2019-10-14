@@ -5,7 +5,9 @@ import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Parser {
 
@@ -14,8 +16,15 @@ public class Parser {
     private Token peekToken = null;
     private List<String> errors = new ArrayList<>();
 
+    private Map<String, PrefixParseFn> prefixParseFns = new HashMap<>();
+    private Map<String, InfixParseFn> infixParseFns = new HashMap<>();
+
     public List<String> getErrors() {
         return errors;
+    }
+
+    public static enum Precedence {
+        LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
     }
 
     public Parser(Lexer lexer) {
@@ -23,6 +32,10 @@ public class Parser {
 
         nextToken();
         nextToken();
+
+        // 注册前置解析函数
+        prefixParseFns.put(Token.IDENT, this::parseIdentifier);
+        prefixParseFns.put(Token.INT, this::parseInteger);
     }
 
     private void nextToken() {
@@ -54,9 +67,23 @@ public class Parser {
             case Token.RETURN:
                 return parseReturnStatement();
             default:
-                return null;
+                return parseExpressionStatement();
         }
     }
+
+    private ExpressionStatement parseExpressionStatement() {
+        ExpressionStatement statement = new ExpressionStatement();
+        statement.token = curToken;
+
+        statement.expression = parseExpression(Precedence.LOWEST);
+
+        if (peekTokenIs(Token.SEMICOLON)) {
+            nextToken();
+        }
+
+        return statement;
+    }
+
 
     private LetStatement parseLetStatement() {
         LetStatement letStatement = new LetStatement();
@@ -120,5 +147,38 @@ public class Parser {
                 tokenType, peekToken.type);
 
         errors.add(msg);
+    }
+
+    private Expression parseExpression(Precedence precedence) {
+        PrefixParseFn fn = prefixParseFns.get(curToken.type);
+        if (fn == null) {
+            return null;
+        }
+
+        return fn.apply();
+    }
+
+    private Expression parseIdentifier() {
+        return new Identifier(curToken, curToken.literal);
+    }
+
+    private void noPrefixParseFnError(String tokenType) {
+        String msg = String.format("no prefix parse function for %s found", tokenType);
+
+        errors.add(msg);
+    }
+
+    private Expression parseInteger() {
+        IntegerLiteral integerLiteral = new IntegerLiteral();
+        integerLiteral.token = curToken;
+
+        try {
+            integerLiteral.value = Integer.valueOf(curToken.literal);
+        } catch (NumberFormatException e) {
+            String msg = String.format("could not parse %s as integer", curToken.literal);
+            errors.add(msg);
+        }
+
+        return integerLiteral;
     }
 }

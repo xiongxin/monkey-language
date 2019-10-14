@@ -2,9 +2,11 @@ package com.xiongxin.app.ast;
 
 import com.xiongxin.app.lexer.Token;
 
-public class Identifier implements Expression {
-    public Token token; // the IDENT token
-    public String value;
+public class PrefixExpression implements Expression {
+    public Token token;
+    public String operator;
+    public Expression right;
+
 
     @Override
     public void expressionNode() {
@@ -16,13 +18,12 @@ public class Identifier implements Expression {
         return token.literal;
     }
 
-    public Identifier(Token token, String value) {
-        this.token = token;
-        this.value = value;
-    }
-
     @Override
     public String toString() {
-        return value;
+
+        return "(" +
+                    operator +
+                    right.toString() +
+                ")";
     }
 }

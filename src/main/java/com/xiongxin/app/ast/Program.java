@@ -19,4 +19,11 @@ public class Program implements Node {
             return "";
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        statements.forEach(sb::append);
+        return sb.toString();
+    }
 }
