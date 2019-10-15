@@ -3,6 +3,7 @@ package com.xiongxin.app.parser;
 import com.xiongxin.app.ast.*;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
+import jdk.internal.util.xml.impl.Pair;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -103,5 +104,116 @@ public class ParserTest {
         Parser.Precedence precedence2 = Parser.Precedence.CALL;
         System.out.println( precedence1.name());
         System.out.println(precedence2.ordinal());
+    }
+
+    private static class PrefixTest {
+        public String input;
+        public String operator;
+        public Integer integerValue;
+
+        public PrefixTest(String input, String operator, Integer integerValue) {
+            this.input = input;
+            this.operator = operator;
+            this.integerValue = integerValue;
+        }
+    }
+
+    @Test
+    public void testParsingPrefixExpression() {
+        List<PrefixTest> prefixTests = Arrays.asList(
+                new PrefixTest("!5", "!", 5),
+                new PrefixTest("-15", "-", 15),
+                new PrefixTest("-1", "-", 15)
+        );
+
+        prefixTests.forEach( prefixTest -> {
+            Lexer lexer = new Lexer(prefixTest.input);
+            Parser parser = new Parser(lexer);
+            Program program = parser.parseProgram();
+
+            checkParserError(parser);
+
+            assertEquals("statement length", 1, program.statements.size());
+            ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+            PrefixExpression prefixExpression = (PrefixExpression) statement.expression;
+            System.out.println(prefixExpression);
+            assertEquals("operator",prefixTest.operator, prefixExpression.operator);
+            assertEquals("integerValue", prefixTest.integerValue, ((IntegerLiteral) prefixExpression.right).value);
+        });
+    }
+
+    private static class InfixTest {
+        public String input;
+        public Integer leftValue;
+        public String operator;
+        public Integer rightValue;
+
+        public InfixTest(String input, Integer leftValue, String operator, Integer rightValue) {
+            this.input = input;
+            this.leftValue = leftValue;
+            this.operator = operator;
+            this.rightValue = rightValue;
+        }
+    }
+
+    @Test
+    public void testParsingInfixExpressions() {
+        List<InfixTest> infixTests = Arrays.asList(
+                new InfixTest(" 5 + 5", 5, "+", 5),
+                new InfixTest(" 5 - 5", 5, "-", 5),
+                new InfixTest(" 5 / 5", 5, "/", 5),
+                new InfixTest(" 5 > 5", 5, ">", 5),
+                new InfixTest(" 5 < 5", 5, "<", 5),
+                new InfixTest(" 5 == 5", 5, "==", 5),
+                new InfixTest(" 5 != 5", 5, "!=", 5)
+        );
+
+        infixTests.forEach( infixTest -> {
+            Lexer lexer = new Lexer(infixTest.input);
+            Parser parser = new Parser(lexer);
+            Program program = parser.parseProgram();
+
+            checkParserError(parser);
+
+            assertEquals("statement", 1, program.statements.size());
+            ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+            InfixExpression expression = (InfixExpression) statement.expression;
+            System.out.println(expression);
+            assertEquals("left", infixTest.leftValue, ( (IntegerLiteral) expression.left).value);
+            assertEquals("operator",infixTest.operator, expression.operator);
+            assertEquals("right", infixTest.leftValue, ( (IntegerLiteral) expression.right).value);
+        } );
+    }
+
+
+    private static class PrecedenceTest {
+        public String input;
+        public String expected;
+
+        public PrecedenceTest(String input, String expected) {
+            this.input = input;
+            this.expected = expected;
+        }
+    }
+
+
+    @Test
+    public void testOperatorPrecedenceParsing() {
+        List<PrecedenceTest> tests = Arrays.asList(
+                new PrecedenceTest("-a * b", "((-a) * b)"),
+                new PrecedenceTest("!-a", "(!(-a))")
+        );
+
+        tests.forEach( precedenceTest -> {
+            Lexer lexer = new Lexer(precedenceTest.input);
+            Parser parser = new Parser(lexer);
+            Program program = parser.parseProgram();
+
+            checkParserError(parser);
+
+            assertEquals("statement", 1, program.statements.size());
+            ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+            assertEquals("expected", precedenceTest.expected, statement.expression.toString());
+        } );
     }
 }

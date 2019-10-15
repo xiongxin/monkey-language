@@ -18,12 +18,14 @@ public class Parser {
 
     private Map<String, PrefixParseFn> prefixParseFns = new HashMap<>();
     private Map<String, InfixParseFn> infixParseFns = new HashMap<>();
+    private Map<String, Precedence> precedences = new HashMap<>();
 
     public List<String> getErrors() {
         return errors;
     }
 
     public static enum Precedence {
+        //  优先级顺序 低 <- 高
         LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
     }
 
@@ -33,9 +35,31 @@ public class Parser {
         nextToken();
         nextToken();
 
+        // 注册优先级
+        precedences.put(Token.EQ, Precedence.EQUALS);
+        precedences.put(Token.NOT_EQ, Precedence.EQUALS);
+        precedences.put(Token.LT, Precedence.LESSGREATER);
+        precedences.put(Token.GT, Precedence.LESSGREATER);
+        precedences.put(Token.PLUS, Precedence.SUM);
+        precedences.put(Token.MINUS, Precedence.SUM );
+        precedences.put(Token.SLASH, Precedence.PRODUCT);
+        precedences.put(Token.ASTERISK, Precedence.PRODUCT);
+
         // 注册前置解析函数
         prefixParseFns.put(Token.IDENT, this::parseIdentifier);
         prefixParseFns.put(Token.INT, this::parseInteger);
+        prefixParseFns.put(Token.BANG, this::parsePrefixExpression);
+        prefixParseFns.put(Token.MINUS, this::parsePrefixExpression);
+
+        // 注册中指表达式函数
+        infixParseFns.put(Token.PLUS, this::parseInfixExpression);
+        infixParseFns.put(Token.MINUS, this::parseInfixExpression);
+        infixParseFns.put(Token.SLASH, this::parseInfixExpression);
+        infixParseFns.put(Token.ASTERISK, this::parseInfixExpression);
+        infixParseFns.put(Token.EQ, this::parseInfixExpression);
+        infixParseFns.put(Token.NOT_EQ, this::parseInfixExpression);
+        infixParseFns.put(Token.LT, this::parseInfixExpression);
+        infixParseFns.put(Token.GT, this::parseInfixExpression);
     }
 
     private void nextToken() {
@@ -77,7 +101,7 @@ public class Parser {
 
         statement.expression = parseExpression(Precedence.LOWEST);
 
-        if (peekTokenIs(Token.SEMICOLON)) {
+        if ( !peekTokenIs(Token.SEMICOLON) ) {
             nextToken();
         }
 
@@ -152,10 +176,25 @@ public class Parser {
     private Expression parseExpression(Precedence precedence) {
         PrefixParseFn fn = prefixParseFns.get(curToken.type);
         if (fn == null) {
+            noPrefixParseFnError(curToken.type);
             return null;
         }
 
-        return fn.apply();
+        Expression leftExpression = fn.apply();
+
+        while ( !peekTokenIs(Token.SEMICOLON) && precedence.ordinal() < peekPrecedence().ordinal() ) {
+            InfixParseFn infixParseFn = infixParseFns.get(peekToken.type);
+
+            if (infixParseFn == null) {
+                return leftExpression;
+            }
+
+            nextToken();
+
+            leftExpression = infixParseFn.apply(leftExpression);
+        }
+
+        return leftExpression;
     }
 
     private Expression parseIdentifier() {
@@ -181,4 +220,40 @@ public class Parser {
 
         return integerLiteral;
     }
+
+    private Expression parseInfixExpression(Expression left) {
+
+        InfixExpression infixExpression = new InfixExpression();
+
+        infixExpression.token = curToken;
+        infixExpression.operator = curToken.literal;
+        infixExpression.left = left;
+
+        Precedence precedence = curPrecedence();
+        nextToken();
+        infixExpression.right = parseExpression(precedence);
+
+        return infixExpression;
+    }
+
+    private Expression parsePrefixExpression() {
+        PrefixExpression expression = new PrefixExpression();
+        expression.token = curToken;
+        expression.operator = curToken.literal;
+
+        nextToken();
+
+        expression.right = parseExpression(Precedence.PREFIX);
+
+        return expression;
+    }
+
+    private Precedence peekPrecedence() {
+        return precedences.getOrDefault(peekToken.type, Precedence.LOWEST);
+    }
+
+    private Precedence curPrecedence() {
+        return precedences.getOrDefault(curToken.type, Precedence.LOWEST);
+    }
+
 }
