@@ -4,6 +4,7 @@ import com.xiongxin.app.ast.*;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
 
+import java.lang.Boolean;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ public class Parser {
         return errors;
     }
 
-    public static enum Precedence {
+    public enum Precedence {
         //  优先级顺序 低 <- 高
         LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
     }
@@ -50,6 +51,10 @@ public class Parser {
         prefixParseFns.put(Token.INT, this::parseInteger);
         prefixParseFns.put(Token.BANG, this::parsePrefixExpression);
         prefixParseFns.put(Token.MINUS, this::parsePrefixExpression);
+        prefixParseFns.put(Token.TRUE, this::parseBoolean);
+        prefixParseFns.put(Token.FALSE, this::parseBoolean);
+        prefixParseFns.put(Token.LPAREN, this::parseGroupExpression);
+        prefixParseFns.put(Token.IF, this::parseIfExpression);
 
         // 注册中指表达式函数
         infixParseFns.put(Token.PLUS, this::parseInfixExpression);
@@ -101,7 +106,7 @@ public class Parser {
 
         statement.expression = parseExpression(Precedence.LOWEST);
 
-        if ( !peekTokenIs(Token.SEMICOLON) ) {
+        if ( peekTokenIs(Token.SEMICOLON) ) {
             nextToken();
         }
 
@@ -221,6 +226,10 @@ public class Parser {
         return integerLiteral;
     }
 
+    private Expression parseBoolean() {
+        return new BooleanExpression(curToken, curTokenIs(Token.TRUE));
+    }
+
     private Expression parseInfixExpression(Expression left) {
 
         InfixExpression infixExpression = new InfixExpression();
@@ -246,6 +255,72 @@ public class Parser {
         expression.right = parseExpression(Precedence.PREFIX);
 
         return expression;
+    }
+
+    private Expression parseGroupExpression() {
+        nextToken();
+
+        Expression expression = parseExpression(Precedence.LOWEST);
+
+        if ( !expectPeek(Token.RPAREN) ) {
+            return null;
+        }
+
+        return expression;
+    }
+
+    private Expression parseIfExpression() {
+        IfExpression ifExpression = new IfExpression();
+        ifExpression.token = curToken; // if
+
+        if ( !expectPeek(Token.LPAREN) ) { // eat (
+            return null;
+        }
+
+        nextToken(); // expression
+
+        ifExpression.condition = parseExpression(Precedence.LOWEST);
+
+        if ( !expectPeek(Token.RPAREN) ) { // eat )
+            return null;
+        }
+
+        if ( !expectPeek(Token.LBRACE) ) { // eat {
+            return null;
+        }
+
+        // curToken {
+        ifExpression.consequence = parseBlockStatement();
+
+        if (peekTokenIs(Token.ELSE)) {
+            nextToken();
+
+            if ( !expectPeek(Token.LBRACE) ) {
+                return null;
+            }
+
+            ifExpression.alternative = parseBlockStatement();
+        }
+
+        return ifExpression;
+    }
+
+    private BlockStatement parseBlockStatement() {
+        BlockStatement blockStatement = new BlockStatement();
+        blockStatement.token = curToken;
+
+        nextToken(); // eat {
+
+        while (!curTokenIs(Token.RBARCE)) {
+            Statement statement = parseStatement();
+            if (statement != null) {
+                blockStatement.statements.add(statement);
+            }
+
+            nextToken();
+        }
+
+        return blockStatement;
     }
 
     private Precedence peekPrecedence() {

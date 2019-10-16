@@ -216,4 +216,55 @@ public class ParserTest {
             assertEquals("expected", precedenceTest.expected, statement.expression.toString());
         } );
     }
+
+    @Test
+    public void testBooleanExpression() {
+        String input = "false";
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+
+        checkParserError(parser);
+
+        assertEquals("statement length", 1, program.statements.size());
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        BooleanExpression booleanExpression = (BooleanExpression) statement.expression;
+
+        assertEquals("'boolean'", false, booleanExpression.value);
+    }
+
+    @Test
+    public void testGroupExpression() {
+        List<PrecedenceTest> tests = Arrays.asList(
+                new PrecedenceTest("1 + ( 2 + 3 ) + 4", "((1 + (2 + 3)) + 4)")
+                ,new PrecedenceTest("(5 + 5) * 2", "((5 + 5) * 2)")
+        );
+
+        tests.forEach( precedenceTest -> {
+            Lexer lexer = new Lexer(precedenceTest.input);
+            Parser parser = new Parser(lexer);
+            Program program = parser.parseProgram();
+
+            checkParserError(parser);
+
+            //assertEquals("statement", 1, program.statements.size());
+            ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+            assertEquals("expected", precedenceTest.expected, statement.expression.toString());
+        } );
+    }
+
+    @Test
+    public void testIfExpression() {
+        String input = "if ( x < y ) { let a = x + y; return a; } else { x - y }";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        IfExpression expression = (IfExpression) statement.expression;
+        System.out.println(expression.toString());
+        assertEquals("statement length", 1, program.statements.size());
+
+        checkParserError(parser);
+    }
 }

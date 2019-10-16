@@ -1,8 +1,8 @@
-## 2.6 Parsing Expressions
+# 2.6 Parsing Expressions
 
 - Operator precedence(操作符优先级), 例如 `5 * 5 + 10`
 
-### Monkey Expressions
+## Monkey Expressions
 
 Monkey语言的表达式类型
 
@@ -17,5 +17,7 @@ Monkey语言的表达式类型
 - if expressions: `let result = if (10 > 5) { true } else { false }`
 
 
-### Top Down Operator Precedence ( or: Paratt Parsing )
+## Top Down Operator Precedence ( or: Paratt Parsing )
+
+## How Pratt Parsing Works
 
