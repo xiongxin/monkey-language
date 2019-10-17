@@ -5,7 +5,7 @@ import com.xiongxin.app.lexer.Token;
 public class ReturnStatement implements Statement {
 
     public Token token;  // the RETURN token
-    public Exception returnValue; // 表达式
+    public Expression returnValue; // 表达式
 
     @Override
     public void statementNode() {

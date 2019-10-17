@@ -1,14 +1,12 @@
 package com.xiongxin.app.parser;
 
+import com.sun.corba.se.impl.oa.toa.TOA;
 import com.xiongxin.app.ast.*;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
 
 import java.lang.Boolean;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Parser {
 
@@ -45,6 +43,7 @@ public class Parser {
         precedences.put(Token.MINUS, Precedence.SUM );
         precedences.put(Token.SLASH, Precedence.PRODUCT);
         precedences.put(Token.ASTERISK, Precedence.PRODUCT);
+        precedences.put(Token.LPAREN, Precedence.CALL);
 
         // 注册前置解析函数
         prefixParseFns.put(Token.IDENT, this::parseIdentifier);
@@ -55,6 +54,7 @@ public class Parser {
         prefixParseFns.put(Token.FALSE, this::parseBoolean);
         prefixParseFns.put(Token.LPAREN, this::parseGroupExpression);
         prefixParseFns.put(Token.IF, this::parseIfExpression);
+        prefixParseFns.put(Token.FUNCTION, this::parseFnExpression);
 
         // 注册中指表达式函数
         infixParseFns.put(Token.PLUS, this::parseInfixExpression);
@@ -65,6 +65,7 @@ public class Parser {
         infixParseFns.put(Token.NOT_EQ, this::parseInfixExpression);
         infixParseFns.put(Token.LT, this::parseInfixExpression);
         infixParseFns.put(Token.GT, this::parseInfixExpression);
+        infixParseFns.put(Token.LPAREN, this::parseCallExpression);
     }
 
     private void nextToken() {
@@ -128,9 +129,11 @@ public class Parser {
             return null;
         }
 
-        // TODO: We're skipping the expression until we
-        // encounter a semicolon
-        while ( !curTokenIs(Token.SEMICOLON) && !curTokenIs(Token.EOF) ) {
+        nextToken(); // eat =
+
+        letStatement.value = parseExpression(Precedence.LOWEST);
+
+        while ( peekTokenIs(Token.SEMICOLON) ) {
             nextToken();
         }
 
@@ -142,12 +145,12 @@ public class Parser {
         ReturnStatement returnStatement = new ReturnStatement();
         returnStatement.token = curToken;
 
-        nextToken();
+        nextToken(); // eat return
 
-        // TODO: We're skipping the expression until we
-        // encounter a semicolon
-        while ( !curTokenIs(Token.SEMICOLON) && !curTokenIs(Token.EOF) ) {
-            nextToken();
+        returnStatement.returnValue = parseExpression(Precedence.LOWEST);
+
+        while ( peekTokenIs(Token.SEMICOLON) ) {
+            nextToken(); // eat ;
         }
 
         return returnStatement;
@@ -303,6 +306,72 @@ public class Parser {
         }
 
         return ifExpression;
+    }
+
+    private Expression parseFnExpression() {
+        FunctionLiteral functionLiteral = new FunctionLiteral();
+        functionLiteral.token = curToken;
+
+        if ( !expectPeek(Token.LPAREN) ) {
+            return null;
+        }
+
+        nextToken();
+
+        while ( !curTokenIs(Token.RPAREN) ) {
+            Identifier identifier = new Identifier(curToken, curToken.literal);
+            functionLiteral.parameters.add(identifier);
+            if ( peekTokenIs(Token.COMMA) ) { nextToken(); nextToken(); } // eat ,
+            else {
+                if ( !expectPeek(Token.RPAREN) ) {
+                    return null;
+                }
+            }
+        }
+
+        if ( !expectPeek(Token.LBRACE) ) {
+            return null;
+        }
+
+        functionLiteral.body = parseBlockStatement();
+
+        return functionLiteral;
+    }
+
+    private List<Expression> parseCallArgsExpression() {
+        List<Expression> args = new LinkedList<>();
+
+        if ( peekTokenIs(Token.RPAREN) ) { // 空参数类型
+            nextToken();
+
+            return args;
+        }
+
+        nextToken();
+
+        args.add(parseExpression(Precedence.LOWEST));
+
+        while ( peekTokenIs(Token.COMMA) ) {
+            nextToken(); // eat ,
+            nextToken(); // identifier;
+            args.add(parseExpression(Precedence.LOWEST));
+        }
+
+        if ( !expectPeek(Token.RPAREN) ) {
+            return null;
+        }
+
+        return args;
+    }
+
+    private Expression parseCallExpression(Expression left) {
+        CallExpression expression = new CallExpression();
+
+        expression.token = curToken;
+        expression.function = left;
+        expression.arguments = parseCallArgsExpression();
+
+        return expression;
     }
 
     private BlockStatement parseBlockStatement() {

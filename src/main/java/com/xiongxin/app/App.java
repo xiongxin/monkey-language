@@ -1,7 +1,9 @@
 package com.xiongxin.app;
 
+import com.xiongxin.app.ast.Program;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
+import com.xiongxin.app.parser.Parser;
 
 import java.util.Scanner;
 
@@ -24,9 +26,14 @@ public class App
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             Lexer lexer = new Lexer(line);
-            for (Token token = lexer.nextToken(); !token.type.equals(Token.EOF); token = lexer.nextToken()) {
-                System.out.println(token);
+            Parser parser = new Parser(lexer);
+            Program program = parser.parseProgram();
+
+            if (parser.getErrors().size() > 0) {
+                parser.getErrors().forEach(System.out::println);
             }
+
+            System.out.println(program.toString());
 
             System.out.print(">>");
         }

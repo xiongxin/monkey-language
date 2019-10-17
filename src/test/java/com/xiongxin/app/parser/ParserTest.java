@@ -59,6 +59,7 @@ public class ParserTest {
         assertEquals("program size", 3, program.statements.size());
 
         program.statements.forEach(statement -> {
+            System.out.println(((ReturnStatement)statement).toString());
             assertEquals(((ReturnStatement)statement).token.type, Token.RETURN);
         });
     }
@@ -264,6 +265,38 @@ public class ParserTest {
         IfExpression expression = (IfExpression) statement.expression;
         System.out.println(expression.toString());
         assertEquals("statement length", 1, program.statements.size());
+
+        checkParserError(parser);
+    }
+
+    @Test
+    public void testFuExpression() {
+        String input = "fn(x, y, z) {};";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        FunctionLiteral expression = (FunctionLiteral) statement.expression;
+        System.out.println(expression.toString());
+        assertEquals("statement length", 1, program.statements.size());
+
+        checkParserError(parser);
+    }
+
+    @Test
+    public void testCallExpression() {
+        String input = "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        assertEquals("statement length", 1, program.statements.size());
+        checkParserError(parser);
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        CallExpression expression = (CallExpression) statement.expression;
+
+        System.out.println(expression.toString());
 
         checkParserError(parser);
     }
