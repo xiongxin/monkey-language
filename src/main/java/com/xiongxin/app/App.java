@@ -1,8 +1,10 @@
 package com.xiongxin.app;
 
 import com.xiongxin.app.ast.Program;
+import com.xiongxin.app.evaluator.Eval;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
+import com.xiongxin.app.obj.Obj;
 import com.xiongxin.app.parser.Parser;
 
 import java.util.Scanner;
@@ -31,9 +33,17 @@ public class App
 
             if (parser.getErrors().size() > 0) {
                 parser.getErrors().forEach(System.out::println);
+                continue;
             }
 
-            System.out.println(program.toString());
+            Eval eval = new Eval();
+            Obj obj = eval.eval(program);
+            if (obj == null) {
+                System.out.print(">>");
+                continue;
+            }
+
+            System.out.println(obj.inspect());
 
             System.out.print(">>");
         }
