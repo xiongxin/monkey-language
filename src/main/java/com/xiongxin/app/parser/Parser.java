@@ -263,6 +263,7 @@ public class Parser {
     private Expression parseGroupExpression() {
         nextToken();
 
+        // 例如: (1 + 1)， 1 和 ) 的优先级相同(最低优先级)，表达式解析停止
         Expression expression = parseExpression(Precedence.LOWEST);
 
         if ( !expectPeek(Token.RPAREN) ) {
