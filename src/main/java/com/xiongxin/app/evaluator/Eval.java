@@ -1,21 +1,22 @@
 package com.xiongxin.app.evaluator;
 
 import com.xiongxin.app.ast.*;
-import com.xiongxin.app.obj.BoolObj;
-import com.xiongxin.app.obj.IntObj;
-import com.xiongxin.app.obj.NullObj;
-import com.xiongxin.app.obj.Obj;
+import com.xiongxin.app.obj.*;
 
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * 实现方法
+ *  递归解析表达式
+ */
 public class Eval {
 
     public Obj eval(Node node) {
         Objects.requireNonNull(node, "node must not null");
 
         if (node instanceof Program) {
-            return evalStatements(((Program) node).statements);
+            return evalProgram((Program) node);
         }
 
         if (node instanceof ExpressionStatement) {
@@ -45,15 +46,45 @@ public class Eval {
             return evalInfixExpression(((InfixExpression) node).operator, left, right);
         }
 
+        if (node instanceof IfExpression) {
+            return evalIfExpression((IfExpression) node);
+        }
+
+        if (node instanceof BlockStatement) {
+            return evalBlockStatement((BlockStatement) node);
+        }
+
+        if (node instanceof ReturnStatement) {
+            Obj obj = eval(((ReturnStatement) node).returnValue);
+
+            return new ReturnObj(obj);
+        }
+
         return null;
     }
 
-
-    private Obj evalStatements(List<Statement> statements) {
-        Objects.requireNonNull(statements, "语句不能为空");
+    private Obj evalProgram(Program program) {
         Obj obj = null;
-        for (Statement statement : statements) {
+
+        for (Statement statement : program.statements) {
             obj = eval(statement);
+
+            if (obj instanceof ReturnObj) {
+                return ((ReturnObj) obj).value; // 如果在Program的statements中存在return，立即返回ReturnObj的值
+            }
+        }
+
+        return obj;
+    }
+
+    private Obj evalBlockStatement(BlockStatement blockStatement) {
+        Obj obj = null;
+        for (Statement statement : blockStatement.statements) {
+            obj = eval(statement);
+
+            if (obj.type().equals(Obj.RETURN_VALUE_OBK)) {
+                return obj; // BlockStatemen中碰到Return 语句时，立即返回 ReturnObj
+            }
         }
 
         return obj;
@@ -145,5 +176,31 @@ public class Eval {
             return BoolObj.TRUE;
         else
             return BoolObj.FALSE;
+    }
+
+
+    private Obj evalIfExpression(IfExpression ifExpression) {
+        Obj obj = eval(ifExpression.condition);
+
+        if (isTruthy(obj)) {
+            return eval(ifExpression.consequence);
+        } else if (ifExpression.alternative != null) {
+            return eval(ifExpression.alternative);
+        } else {
+            return null;
+        }
+    }
+
+
+    private boolean isTruthy(Obj obj) {
+        if (obj == NullObj.NULL) {
+            return false;
+        } else if (obj == BoolObj.FALSE) {
+            return false;
+        } else if (obj == BoolObj.TRUE) {
+            return true;
+        }
+
+        return true;
     }
 }

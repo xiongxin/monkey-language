@@ -129,4 +129,47 @@ public class EvaluatorTest {
             testBoolObj(obj, evalBoolean.expected);
         });
     }
+
+    private static class EvalIf {
+        public String input;
+        public Object expected;
+
+        public EvalIf(String input, Object expected) {
+            this.input = input;
+            this.expected = expected;
+        }
+    }
+
+    @Test
+    public void testIfExpression() {
+        List<EvalIf> tests = Arrays.asList(
+                new EvalIf("if (true) { 10 }", 10),
+                new EvalIf("if (true) { 10 }", 10),
+                new EvalIf("if (10 > 1) { return 10; if (10 >1) { return 10; } return 1; }", 10)
+        );
+
+        tests.forEach(evalIf -> {
+            Obj obj = testEval(evalIf.input);
+            if (evalIf.expected instanceof Integer) {
+                testIntObj(obj, (Integer) evalIf.expected);
+            }
+        });
+    }
+
+
+    @Test
+    public void testReturnExpression() {
+
+        List<EvalInteger> evalIntegers = Arrays.asList(
+                new EvalInteger("return 5;", 5),
+                new EvalInteger("return 10;9", 10),
+                new EvalInteger("return -10;", -10),
+                new EvalInteger("9;return -5;777;", -5)
+        );
+
+        evalIntegers.forEach( evalInteger -> {
+            Obj obj = testEval(evalInteger.input);
+            testIntObj(obj, evalInteger.expected);
+        } );
+    }
 }
