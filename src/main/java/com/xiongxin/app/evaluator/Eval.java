@@ -12,15 +12,15 @@ import java.util.Objects;
  */
 public class Eval {
 
-    public Obj eval(Node node) {
+    public Obj eval(Node node, Environment environment) {
         Objects.requireNonNull(node, "node must not null");
 
         if (node instanceof Program) {
-            return evalProgram((Program) node);
+            return evalProgram((Program) node, environment);
         }
 
         if (node instanceof ExpressionStatement) {
-            return eval(((ExpressionStatement) node).expression);
+            return eval(((ExpressionStatement) node).expression, environment);
         }
 
         if (node instanceof IntegerLiteral) {
@@ -35,55 +35,76 @@ public class Eval {
         }
 
         if (node instanceof PrefixExpression) {
-            Obj obj = eval(((PrefixExpression) node).right);
+            Obj obj = eval(((PrefixExpression) node).right, environment);
+            if (isError(obj)) return obj;
             return evalPrefixExpression( ((PrefixExpression) node).operator, obj);
         }
 
         if (node instanceof InfixExpression) {
-            Obj left = eval(((InfixExpression) node).left);
-            Obj right = eval(((InfixExpression) node).right);
+            Obj left = eval(((InfixExpression) node).left, environment);
+            if (isError(left)) return left;
+
+            Obj right = eval(((InfixExpression) node).right, environment);
+            if (isError(right)) return right;
 
             return evalInfixExpression(((InfixExpression) node).operator, left, right);
         }
 
         if (node instanceof IfExpression) {
-            return evalIfExpression((IfExpression) node);
+            return evalIfExpression((IfExpression) node, environment);
         }
 
         if (node instanceof BlockStatement) {
-            return evalBlockStatement((BlockStatement) node);
+            return evalBlockStatement((BlockStatement) node, environment);
         }
 
         if (node instanceof ReturnStatement) {
-            Obj obj = eval(((ReturnStatement) node).returnValue);
-
+            Obj obj = eval(((ReturnStatement) node).returnValue, environment);
+            if (isError(obj)) return obj;
             return new ReturnObj(obj);
+        }
+
+        if (node instanceof LetStatement) {
+            Obj obj = eval(((LetStatement) node).value, environment);
+            if (isError(obj)) return obj;
+
+            environment.set(((LetStatement) node).name.value, obj);
+        }
+
+        if (node instanceof Identifier) {
+            return evalIdentifier(((Identifier) node), environment);
         }
 
         return null;
     }
 
-    private Obj evalProgram(Program program) {
+    private Obj evalProgram(Program program, Environment environment) {
         Obj obj = null;
 
         for (Statement statement : program.statements) {
-            obj = eval(statement);
+            obj = eval(statement, environment);
 
             if (obj instanceof ReturnObj) {
-                return ((ReturnObj) obj).value; // 如果在Program的statements中存在return，立即返回ReturnObj的值
+                // 如果在Program的statements中存在return，立即返回ReturnObj的值
+                // blockStatement中的return语句会在这里被处理
+                return ((ReturnObj) obj).value;
+            }
+
+            if (obj instanceof ErrObj) {
+                return obj;
             }
         }
 
         return obj;
     }
 
-    private Obj evalBlockStatement(BlockStatement blockStatement) {
+    private Obj evalBlockStatement(BlockStatement blockStatement, Environment environment) {
         Obj obj = null;
         for (Statement statement : blockStatement.statements) {
-            obj = eval(statement);
+            obj = eval(statement, environment);
 
-            if (obj.type().equals(Obj.RETURN_VALUE_OBK)) {
-                return obj; // BlockStatemen中碰到Return 语句时，立即返回 ReturnObj
+            if (obj.type().equals(Obj.RETURN_VALUE_OBK) || obj.type().equals(Obj.ERROR_OBJ)) {
+                return obj; // BlockStatement中碰到Return 语句时，立即返回 ReturnObj
             }
         }
 
@@ -97,7 +118,7 @@ public class Eval {
             case "-":
                 return evalMinusPrefixExpression(right);
             default:
-                return NullObj.NULL;
+                return new ErrObj(String.format("unknown operator: %s%s", operator, right.type()));
         }
     }
 
@@ -126,6 +147,10 @@ public class Eval {
     }
 
     private Obj evalInfixExpression(String operator, Obj left, Obj right) {
+        if (!left.type().equals(right.type())) {
+            return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));
+        }
+
         if (left instanceof IntObj && right instanceof IntObj) {
             return evalIntegerInfixExpression(operator, (IntObj) left, (IntObj) right);
         }
@@ -137,11 +162,11 @@ public class Eval {
                 case "!=":
                     return nativeBoolToBooleanObject(((BoolObj) left).value != ((BoolObj) right).value);
                 default:
-                    return NullObj.NULL;
+                    return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));
             }
         }
 
-        return NullObj.NULL;
+        return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));
     }
 
 
@@ -167,7 +192,7 @@ public class Eval {
             case "!=":
                 return nativeBoolToBooleanObject(lvalue != rvalue);
             default:
-                return NullObj.NULL;
+                return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));
         }
     }
 
@@ -179,13 +204,15 @@ public class Eval {
     }
 
 
-    private Obj evalIfExpression(IfExpression ifExpression) {
-        Obj obj = eval(ifExpression.condition);
+    private Obj evalIfExpression(IfExpression ifExpression, Environment environment) {
+        Obj obj = eval(ifExpression.condition, environment);
+
+        if (isError(obj)) return obj;
 
         if (isTruthy(obj)) {
-            return eval(ifExpression.consequence);
+            return eval(ifExpression.consequence, environment);
         } else if (ifExpression.alternative != null) {
-            return eval(ifExpression.alternative);
+            return eval(ifExpression.alternative, environment);
         } else {
             return null;
         }
@@ -202,5 +229,22 @@ public class Eval {
         }
 
         return true;
+    }
+
+    private boolean isError(Obj obj) {
+        if (obj != null) {
+            return obj.type().equals(Obj.ERROR_OBJ);
+        }
+        return false;
+    }
+
+    private Obj evalIdentifier(Identifier identifier, Environment environment) {
+        Obj obj = environment.get(identifier.value);
+
+        if (obj == null) {
+            return new ErrObj("identifier not found: " + identifier.value);
+        }
+
+        return obj;
     }
 }

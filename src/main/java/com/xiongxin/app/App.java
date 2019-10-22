@@ -4,6 +4,7 @@ import com.xiongxin.app.ast.Program;
 import com.xiongxin.app.evaluator.Eval;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
+import com.xiongxin.app.obj.Environment;
 import com.xiongxin.app.obj.Obj;
 import com.xiongxin.app.parser.Parser;
 
@@ -37,7 +38,8 @@ public class App
             }
 
             Eval eval = new Eval();
-            Obj obj = eval.eval(program);
+            Environment environment = new Environment();
+            Obj obj = eval.eval(program, environment);
             if (obj == null) {
                 System.out.print(">>");
                 continue;

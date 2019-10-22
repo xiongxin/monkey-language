@@ -1,10 +1,11 @@
 package com.xiongxin.app.evaluator;
 
+import com.xiongxin.app.ast.BlockStatement;
+import com.xiongxin.app.ast.Identifier;
 import com.xiongxin.app.ast.Program;
 import com.xiongxin.app.lexer.Lexer;
-import com.xiongxin.app.obj.BoolObj;
-import com.xiongxin.app.obj.IntObj;
-import com.xiongxin.app.obj.Obj;
+import com.xiongxin.app.lexer.Token;
+import com.xiongxin.app.obj.*;
 import com.xiongxin.app.parser.Parser;
 import org.junit.Test;
 
@@ -32,7 +33,8 @@ public class EvaluatorTest {
         Parser parser = new Parser(lexer);
         Program program = parser.parseProgram();
         Eval eval = new Eval();
-        return eval.eval(program);
+        Environment environment = new Environment();
+        return eval.eval(program, environment);
     }
 
     private void testIntObj(Obj obj, int excepted) {
@@ -145,7 +147,7 @@ public class EvaluatorTest {
         List<EvalIf> tests = Arrays.asList(
                 new EvalIf("if (true) { 10 }", 10),
                 new EvalIf("if (true) { 10 }", 10),
-                new EvalIf("if (10 > 1) { return 10; if (10 >1) { return 10; } return 1; }", 10)
+                new EvalIf("if (10 > 1) { return 1; }", 1)
         );
 
         tests.forEach(evalIf -> {
@@ -171,5 +173,56 @@ public class EvaluatorTest {
             Obj obj = testEval(evalInteger.input);
             testIntObj(obj, evalInteger.expected);
         } );
+    }
+
+    private static class ErrorMessage {
+        public String input;
+        public String message;
+
+        public ErrorMessage(String input, String message) {
+            this.input = input;
+            this.message = message;
+        }
+    }
+
+    @Test
+    public void testErrorHanding() {
+        List<ErrorMessage> evalIntegers = Arrays.asList(
+                new ErrorMessage("foobar", "identifier not found: foobar")
+        );
+
+        evalIntegers.forEach( evalInteger -> {
+            ErrObj obj = (ErrObj) testEval(evalInteger.input);
+            assertEquals("message equal:", evalInteger.message, obj.message);
+        } );
+    }
+
+    @Test
+    public void testLetExpression() {
+
+        List<EvalInteger> evalIntegers = Arrays.asList(
+                new EvalInteger("let a = 5; a;", 5),
+                new EvalInteger("let a = 5 * 5; a;", 25)
+        );
+
+        evalIntegers.forEach( evalInteger -> {
+            Obj obj = testEval(evalInteger.input);
+            testIntObj(obj, evalInteger.expected);
+        } );
+    }
+
+
+    @Test
+    public void testFunctionObj() {
+        FunObj obj = new FunObj();
+        obj.parameters = Arrays.asList(
+                new Identifier(new Token(Token.IDENT, "a"), "a"),
+                new Identifier(new Token(Token.IDENT, "b"), "b"),
+                new Identifier(new Token(Token.IDENT, "c"), "c")
+        );
+
+        obj.body = new BlockStatement();
+
+        System.out.println(obj.inspect());
     }
 }
