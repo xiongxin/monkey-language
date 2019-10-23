@@ -212,17 +212,49 @@ public class EvaluatorTest {
     }
 
 
+//    @Test
+//    public void testFunctionObj() {
+//        FunObj obj = new FunObj();
+//        obj.parameters = Arrays.asList(
+//                new Identifier(new Token(Token.IDENT, "a"), "a"),
+//                new Identifier(new Token(Token.IDENT, "b"), "b"),
+//                new Identifier(new Token(Token.IDENT, "c"), "c")
+//        );
+//
+//        obj.body = new BlockStatement();
+//
+//        System.out.println(obj.inspect());
+//    }
+
     @Test
-    public void testFunctionObj() {
-        FunObj obj = new FunObj();
-        obj.parameters = Arrays.asList(
-                new Identifier(new Token(Token.IDENT, "a"), "a"),
-                new Identifier(new Token(Token.IDENT, "b"), "b"),
-                new Identifier(new Token(Token.IDENT, "c"), "c")
+    public void TestFunctioObject() {
+        String input = "fn(x){ x + 2 };";
+
+        Obj eval = testEval(input);
+        assertTrue("is fun obj", eval instanceof FunObj);
+        FunObj funObj = (FunObj) eval;
+        assertEquals("parameter length", 1, funObj.parameters.size());
+        assertEquals("parameter name", "x", funObj.parameters.get(0).value);
+        assertEquals("fun body", "(x + 2)", funObj.body.toString());
+    }
+
+
+    @Test
+    public void testFunctionApp() {
+
+        List<EvalInteger> evalIntegers = Arrays.asList(
+                new EvalInteger("let identity = fn(x) { x; }; identity(5);", 5),
+                new EvalInteger("let identity = fn(x) { return x; }; identity(5);", 5),
+                new EvalInteger("let double = fn(x) { x * 2; }; double(5);", 10),
+                new EvalInteger("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+                new EvalInteger("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+                new EvalInteger("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));",10),
+                new EvalInteger("fn(x) { x; }(5)", 5)
         );
 
-        obj.body = new BlockStatement();
-
-        System.out.println(obj.inspect());
+        evalIntegers.forEach( evalInteger -> {
+            Obj obj = testEval(evalInteger.input);
+            testIntObj(obj, evalInteger.expected);
+        } );
     }
 }

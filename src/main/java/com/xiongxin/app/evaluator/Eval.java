@@ -3,6 +3,7 @@ package com.xiongxin.app.evaluator;
 import com.xiongxin.app.ast.*;
 import com.xiongxin.app.obj.*;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +16,7 @@ public class Eval {
     public Obj eval(Node node, Environment environment) {
         Objects.requireNonNull(node, "node must not null");
 
+        // 动态触发，运行时才能知道具体的类，调用特定的方法
         if (node instanceof Program) {
             return evalProgram((Program) node, environment);
         }
@@ -75,7 +77,25 @@ public class Eval {
             return evalIdentifier(((Identifier) node), environment);
         }
 
+        if (node instanceof FunctionLiteral) {
+            FunctionLiteral functionLiteral = (FunctionLiteral) node;
+            return new FunObj(functionLiteral.parameters, functionLiteral.body, environment);
+        }
+
+        if (node instanceof CallExpression) {
+            Obj obj = eval(((CallExpression) node).function, environment);
+            if (isError(obj)) return obj;
+
+
+        }
+
         return null;
+    }
+
+    private List<Obj> evalExpressions(List<Expression> expressions, Environment environment) {
+        List<Obj> objs = new LinkedList<>();
+
+
     }
 
     private Obj evalProgram(Program program, Environment environment) {
@@ -103,8 +123,10 @@ public class Eval {
         for (Statement statement : blockStatement.statements) {
             obj = eval(statement, environment);
 
+            // BlockStatement中碰到Return 语句时，立即返回 ReturnObj
+            // 解析出错时也立即返回
             if (obj.type().equals(Obj.RETURN_VALUE_OBK) || obj.type().equals(Obj.ERROR_OBJ)) {
-                return obj; // BlockStatement中碰到Return 语句时，立即返回 ReturnObj
+                return obj;
             }
         }
 

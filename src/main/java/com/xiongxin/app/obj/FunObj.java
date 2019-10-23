@@ -13,6 +13,12 @@ public class FunObj implements Obj {
     public Environment environment;
 
 
+    public FunObj(List<Identifier> parameters, BlockStatement body, Environment environment) {
+        this.parameters = parameters;
+        this.body = body;
+        this.environment = environment;
+    }
+
     @Override
     public String type() {
         return FUNCTION_OBJ;

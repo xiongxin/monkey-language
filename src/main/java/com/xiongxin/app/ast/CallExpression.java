@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CallExpression implements Expression {
     public Token token;
-    public Expression function;
+    public Expression function; // identifier
     public List<Expression> arguments = new LinkedList<>();
 
     @Override
