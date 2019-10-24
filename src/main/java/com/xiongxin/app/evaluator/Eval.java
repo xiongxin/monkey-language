@@ -6,6 +6,7 @@ import com.xiongxin.app.obj.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * 实现方法
@@ -82,20 +83,68 @@ public class Eval {
             return new FunObj(functionLiteral.parameters, functionLiteral.body, environment);
         }
 
+        /**
+         *
+         * 需要支持的语法格式
+         * {"let identity = fn(x) { x; }; identity(5);", 5},
+         * {"let identity = fn(x) { return x; }; identity(5);", 5},
+         * {"let double = fn(x) { x * 2; }; double(5);", 10},
+         * {"let add = fn(x, y) { x + y; }; add(5, 5);", 10},
+         * {"let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+         * {"fn(x) { x; }(5)", 5},
+         */
         if (node instanceof CallExpression) {
-            Obj obj = eval(((CallExpression) node).function, environment);
+            // function is an Identifier or FunctionLiteral
+            CallExpression callExpression = (CallExpression) node;
+            Obj obj = eval(callExpression.function, environment);
             if (isError(obj)) return obj;
 
+            FunObj funObj = (FunObj) obj;
+            List<Obj> objs = evalExpressions(callExpression.arguments, environment);
+            if (objs.size() == 1 && isError(objs.get(0)))
+                return objs.get(0);
 
         }
 
         return null;
     }
 
+    // 执行函数
+    private Obj applyFunction(FunObj fn, List<Obj> args) {
+        Environment extendedEnv = extendFunctionEnv(fn, args);
+
+        Obj obj = eval(fn.body, extendedEnv);
+
+        return obj;
+    }
+
+    private Environment extendFunctionEnv(FunObj obj, List<Obj> args) {
+        Environment environment = Environment.newEncloseEnvironment(obj.environment);
+
+        IntStream.range(0, obj.parameters.size())
+                .forEach(idx -> {
+                    environment.set(obj.parameters.get(idx).value, args.get(idx));
+                });
+
+        return environment;
+    }
+
     private List<Obj> evalExpressions(List<Expression> expressions, Environment environment) {
         List<Obj> objs = new LinkedList<>();
 
+        for (Expression expression : expressions) {
+            Obj obj = eval(expression, environment);
+            if (isError(obj)) {
+                objs = new LinkedList<>();
+                objs.add(obj);
 
+                return objs;
+            }
+
+            objs.add(obj);
+        }
+
+        return objs;
     }
 
     private Obj evalProgram(Program program, Environment environment) {
