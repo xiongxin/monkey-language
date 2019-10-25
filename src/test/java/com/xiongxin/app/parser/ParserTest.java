@@ -300,4 +300,21 @@ public class ParserTest {
 
         checkParserError(parser);
     }
+
+    @Test
+    public void testCallExpression1() {
+        String input = "idenity(5)";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        assertEquals("statement length", 1, program.statements.size());
+        checkParserError(parser);
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        CallExpression expression = (CallExpression) statement.expression;
+
+        System.out.println(expression.toString());
+
+        checkParserError(parser);
+    }
 }

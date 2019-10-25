@@ -100,10 +100,11 @@ public class Eval {
             if (isError(obj)) return obj;
 
             FunObj funObj = (FunObj) obj;
-            List<Obj> objs = evalExpressions(callExpression.arguments, environment);
-            if (objs.size() == 1 && isError(objs.get(0)))
-                return objs.get(0);
+            List<Obj> args = evalExpressions(callExpression.arguments, environment);
+            if (args.size() == 1 && isError(args.get(0)))
+                return args.get(0);
 
+            return applyFunction(funObj, args);
         }
 
         return null;
@@ -115,18 +116,27 @@ public class Eval {
 
         Obj obj = eval(fn.body, extendedEnv);
 
-        return obj;
+        return unwrapReturnValue(obj);
     }
 
     private Environment extendFunctionEnv(FunObj obj, List<Obj> args) {
         Environment environment = Environment.newEncloseEnvironment(obj.environment);
 
+        // 将参数列表装进当前函数运行时环境
         IntStream.range(0, obj.parameters.size())
                 .forEach(idx -> {
                     environment.set(obj.parameters.get(idx).value, args.get(idx));
                 });
 
         return environment;
+    }
+
+    private Obj unwrapReturnValue(Obj obj) {
+        if (obj instanceof ReturnObj) {
+            return ((ReturnObj) obj).value;
+        }
+
+        return obj;
     }
 
     private List<Obj> evalExpressions(List<Expression> expressions, Environment environment) {

@@ -243,12 +243,12 @@ public class EvaluatorTest {
     public void testFunctionApp() {
 
         List<EvalInteger> evalIntegers = Arrays.asList(
-                new EvalInteger("let identity = fn(x) { x; }; identity(5);", 5),
+                new EvalInteger("let identity = fn(x) { return x; }; identity(5);", 5),
                 new EvalInteger("let identity = fn(x) { return x; }; identity(5);", 5),
                 new EvalInteger("let double = fn(x) { x * 2; }; double(5);", 10),
                 new EvalInteger("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
                 new EvalInteger("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
-                new EvalInteger("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));",10),
+                new EvalInteger("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));",20),
                 new EvalInteger("fn(x) { x; }(5)", 5)
         );
 
