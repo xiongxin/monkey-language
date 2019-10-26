@@ -55,6 +55,7 @@ public class Parser {
         prefixParseFns.put(Token.LPAREN, this::parseGroupExpression);
         prefixParseFns.put(Token.IF, this::parseIfExpression);
         prefixParseFns.put(Token.FUNCTION, this::parseFnExpression);
+        prefixParseFns.put(Token.STRING, this::parseStringLiteral);
 
         // 注册中指表达式函数
         infixParseFns.put(Token.PLUS, this::parseInfixExpression);
@@ -391,6 +392,10 @@ public class Parser {
         }
 
         return blockStatement;
+    }
+
+    private Expression parseStringLiteral() {
+        return new StringLiteral(curToken, curToken.literal);
     }
 
     private Precedence peekPrecedence() {

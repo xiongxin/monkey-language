@@ -82,6 +82,10 @@ public class Lexer {
             case Character.MIN_VALUE:
                 token = newToken(Token.EOF, Character.MIN_VALUE);
                 break;
+            case '"':
+                token.type = Token.STRING;
+                token.literal = readString();
+                break;
             default:
                 if ( Character.isLetter(ch) ) {
                     token.literal = readIdentifier();
@@ -108,7 +112,23 @@ public class Lexer {
         return new Token(tokenType, String.valueOf(ch));
     }
 
-    public void readChar() {
+
+    private String readString() {
+
+        readChar(); // eat "
+
+        int curPosition = position;
+
+        while (true) {
+            readChar();
+
+            if (ch == '"') break;
+        }
+
+        return String.valueOf(Arrays.copyOfRange(input, curPosition, position));
+    }
+
+    private void readChar() {
         if (readPosition >= input.length) {
             ch = Character.MIN_VALUE;
         } else {

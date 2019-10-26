@@ -83,6 +83,10 @@ public class Eval {
             return new FunObj(functionLiteral.parameters, functionLiteral.body, environment);
         }
 
+        if (node instanceof StringLiteral) {
+            return new StrObj(((StringLiteral) node).value);
+        }
+
         /**
          *
          * 需要支持的语法格式
@@ -245,6 +249,13 @@ public class Eval {
                 default:
                     return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));
             }
+        }
+
+        if (left instanceof StrObj && right instanceof StrObj) {
+            String lvalue = ((StrObj) left).value;
+            String rvalue = ((StrObj) right).value;
+
+            return new StrObj(lvalue + rvalue);
         }
 
         return new ErrObj(String.format("unknown operator: %s %s %s",left.type(), operator, right.type()));

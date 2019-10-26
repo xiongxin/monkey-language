@@ -317,4 +317,21 @@ public class ParserTest {
 
         checkParserError(parser);
     }
+
+    @Test
+    public void testStringLiteralExpression1() {
+        String input = "\"hello world\"";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        assertEquals("statement length", 1, program.statements.size());
+        checkParserError(parser);
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        StringLiteral expression = (StringLiteral) statement.expression;
+        assertEquals("string equal", "hello world", expression.value);
+        System.out.println(expression.toString());
+
+        checkParserError(parser);
+    }
 }

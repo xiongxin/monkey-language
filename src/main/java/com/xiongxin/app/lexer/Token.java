@@ -43,6 +43,9 @@ public class Token {
     public final static String EQ = "==";
     public final static String NOT_EQ = "!=";
 
+    // 数据类型
+    public final static String STRING = "STRING";
+
     public String type;
     public String literal;
 

@@ -66,7 +66,9 @@ public class LexerTest
                 "return false; \n" +
                 "} \n" +
                 "10 == 10; \n" +
-                "10 != 9; \n";
+                "10 != 9; \n" +
+                "\"foobar\"" +
+                "\"foo bar\"";
         List<Expected> tests = new ArrayList<>();
 
         tests.add(new Expected(Token.LET, "let"));
@@ -141,6 +143,8 @@ public class LexerTest
         tests.add(new Expected(Token.NOT_EQ, "!="));
         tests.add(new Expected(Token.INT, "9"));
         tests.add(new Expected(Token.SEMICOLON, ";"));
+        tests.add(new Expected(Token.STRING, "foobar"));
+        tests.add(new Expected(Token.STRING, "foo bar"));
         tests.add(new Expected(Token.EOF, String.valueOf(Character.MIN_VALUE)));
 
 
