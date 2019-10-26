@@ -3,9 +3,7 @@ package com.xiongxin.app.evaluator;
 import com.xiongxin.app.ast.*;
 import com.xiongxin.app.obj.*;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -13,6 +11,21 @@ import java.util.stream.IntStream;
  *  递归解析表达式
  */
 public class Eval {
+
+    private static Map<String, BuiltinObj> builtins = new HashMap<String, BuiltinObj>(){{
+        put("len", new BuiltinObj(args -> {
+            if (args.length != 1) {
+                return new ErrObj(String.format("wrong number of arguments. got=%d, want=1", args.length));
+            }
+
+            switch (args[0].type()) {
+                case Obj.STRING_OBJ:
+                    return new IntObj(((StrObj) args[0]).value.length());
+                default:
+                    return new ErrObj(String.format(""));
+            }
+        }));
+    }};
 
     public Obj eval(Node node, Environment environment) {
         Objects.requireNonNull(node, "node must not null");
@@ -103,12 +116,19 @@ public class Eval {
             Obj obj = eval(callExpression.function, environment);
             if (isError(obj)) return obj;
 
-            FunObj funObj = (FunObj) obj;
             List<Obj> args = evalExpressions(callExpression.arguments, environment);
-            if (args.size() == 1 && isError(args.get(0)))
-                return args.get(0);
 
-            return applyFunction(funObj, args);
+            if (obj instanceof BuiltinObj) {
+                return ((BuiltinObj) obj).fn.apply(args.toArray(new Obj[0]));
+            }
+
+            if (obj instanceof FunObj) {
+                FunObj funObj = (FunObj) obj;
+                if (args.size() == 1 && isError(args.get(0)))
+                    return args.get(0);
+
+                return applyFunction(funObj, args);
+            }
         }
 
         return null;
@@ -334,6 +354,11 @@ public class Eval {
         Obj obj = environment.get(identifier.value);
 
         if (obj == null) {
+            obj = builtins.get(identifier.value);
+
+            if (obj != null) {
+                return obj;
+            }
             return new ErrObj("identifier not found: " + identifier.value);
         }
 

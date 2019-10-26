@@ -15,4 +15,5 @@ public interface Obj {
     public static final String ERROR_OBJ = "ERROR";
     public static final String FUNCTION_OBJ = "FUNCTION";
     public static final String STRING_OBJ = "STRING";
+    public static final String BUILTIN_OBJ = "BUILTIN";
 }
