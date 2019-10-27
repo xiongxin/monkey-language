@@ -1,13 +1,15 @@
 package com.xiongxin.app.parser;
 
-import com.sun.corba.se.impl.oa.toa.TOA;
 import com.xiongxin.app.ast.*;
 import com.xiongxin.app.lexer.Lexer;
 import com.xiongxin.app.lexer.Token;
 
-import java.lang.Boolean;
 import java.util.*;
 
+/**
+ * 解析器
+ * 将Token解析成 ast 语法树
+ */
 public class Parser {
 
     private Lexer lexer;
@@ -56,6 +58,7 @@ public class Parser {
         prefixParseFns.put(Token.IF, this::parseIfExpression);
         prefixParseFns.put(Token.FUNCTION, this::parseFnExpression);
         prefixParseFns.put(Token.STRING, this::parseStringLiteral);
+        prefixParseFns.put(Token.LBRACKET,this::parseArrayLiteral);
 
         // 注册中指表达式函数
         infixParseFns.put(Token.PLUS, this::parseInfixExpression);
@@ -392,6 +395,39 @@ public class Parser {
         }
 
         return blockStatement;
+    }
+
+    private ArrayLiteral parseArrayLiteral() {
+        ArrayLiteral arrayLiteral = new ArrayLiteral();
+        arrayLiteral.token = curToken;
+
+        arrayLiteral.elements = parseExpressionList(Token.RBRACKET);
+
+        return arrayLiteral;
+    }
+
+    private List<Expression> parseExpressionList(String end) {
+        List<Expression> list = new LinkedList<>();
+
+        if (peekTokenIs(end)) {
+            nextToken();
+            return list;
+        }
+
+        nextToken();
+
+        list.add(parseExpression(Precedence.LOWEST));
+
+        while (peekTokenIs(Token.COMMA)) {
+            nextToken();nextToken();// eat ,
+            list.add(parseExpression(Precedence.LOWEST));
+        }
+
+        if (!expectPeek(end)) {
+            return null;
+        }
+
+        return list;
     }
 
     private Expression parseStringLiteral() {

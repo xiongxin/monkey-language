@@ -86,6 +86,12 @@ public class Lexer {
                 token.type = Token.STRING;
                 token.literal = readString();
                 break;
+            case '[':
+                token = newToken(Token.LBRACKET, ch);
+                break;
+            case ']':
+                token = newToken(Token.RBRACKET, ch);
+                break;
             default:
                 if ( Character.isLetter(ch) ) {
                     token.literal = readIdentifier();

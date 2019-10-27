@@ -68,7 +68,8 @@ public class LexerTest
                 "10 == 10; \n" +
                 "10 != 9; \n" +
                 "\"foobar\"" +
-                "\"foo bar\"";
+                "\"foo bar\"" +
+                "[1, 2]";
         List<Expected> tests = new ArrayList<>();
 
         tests.add(new Expected(Token.LET, "let"));
@@ -145,6 +146,11 @@ public class LexerTest
         tests.add(new Expected(Token.SEMICOLON, ";"));
         tests.add(new Expected(Token.STRING, "foobar"));
         tests.add(new Expected(Token.STRING, "foo bar"));
+        tests.add(new Expected(Token.LBRACKET, "["));
+        tests.add(new Expected(Token.INT, "1"));
+        tests.add(new Expected(Token.COMMA, ","));
+        tests.add(new Expected(Token.INT, "2"));
+        tests.add(new Expected(Token.RBRACKET, "]"));
         tests.add(new Expected(Token.EOF, String.valueOf(Character.MIN_VALUE)));
 
 

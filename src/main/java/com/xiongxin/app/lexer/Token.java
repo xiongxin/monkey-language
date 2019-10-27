@@ -30,6 +30,8 @@ public class Token {
     public final static String RPAREN = ")";
     public final static String LBRACE = "{";
     public final static String RBARCE = "}";
+    public final static String LBRACKET = "[";
+    public final static String RBRACKET = "]";
 
     // keywords
     public final static String FUNCTION = "FUNCTION";
@@ -49,17 +51,15 @@ public class Token {
     public String type;
     public String literal;
 
-    public static Map<String, String> keywords = new HashMap<>();
-
-    static {
-        keywords.put("fn", FUNCTION);
-        keywords.put("let", LET);
-        keywords.put("true", TRUE);
-        keywords.put("false", FALSE);
-        keywords.put("if", IF);
-        keywords.put("else", ELSE);
-        keywords.put("return", RETURN);
-    }
+    private static Map<String, String> keywords = new HashMap<String, String>(){{
+        put("fn", FUNCTION);
+        put("let", LET);
+        put("true", TRUE);
+        put("false", FALSE);
+        put("if", IF);
+        put("else", ELSE);
+        put("return", RETURN);
+    }};
 
     public static String lookupIdent(String ident) {
         return keywords.getOrDefault(ident, IDENT);

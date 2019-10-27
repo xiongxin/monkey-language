@@ -334,4 +334,21 @@ public class ParserTest {
 
         checkParserError(parser);
     }
+
+    @Test
+    public void testArrayLiteralExpression1() {
+        String input = "[1, 2 * 2, 3 + 3]";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        assertEquals("statement length", 1, program.statements.size());
+        checkParserError(parser);
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        ArrayLiteral expression = (ArrayLiteral) statement.expression;
+        assertEquals("array length", 3, expression.elements.size());
+        System.out.println(expression.toString());
+
+        checkParserError(parser);
+    }
 }

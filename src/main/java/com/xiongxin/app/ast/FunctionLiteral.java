@@ -5,6 +5,7 @@ import com.xiongxin.app.lexer.Token;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FunctionLiteral implements Expression {
     public Token token; // The fn token
@@ -24,18 +25,11 @@ public class FunctionLiteral implements Expression {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
 
-        sb.append(token.literal);
-        sb.append("(");
-        parameters.forEach( params -> {
-            sb.append(params.toString());
-            sb.append(",");
-        } );
-        sb.deleteCharAt(sb.lastIndexOf(","));
-        sb.append(") ");
-        sb.append(body.toString());
-
-        return sb.toString();
+        return token.literal +
+                "(" +
+                parameters.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                ") " +
+                body.toString();
     }
 }

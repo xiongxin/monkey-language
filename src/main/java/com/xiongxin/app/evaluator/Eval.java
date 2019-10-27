@@ -7,8 +7,9 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 /**
+ * 将 ast 转换成 Obj 类型
  * 实现方法
- *  递归解析表达式
+ *  根据ast类型，递归解析表达式
  */
 public class Eval {
 
@@ -181,6 +182,13 @@ public class Eval {
         return objs;
     }
 
+    /**
+     * 解析程序
+     * 一个程序包含 很多 Statement
+     * @param program
+     * @param environment
+     * @return
+     */
     private Obj evalProgram(Program program, Environment environment) {
         Obj obj = null;
 
