@@ -27,7 +27,7 @@ public class Parser {
 
     public enum Precedence {
         //  优先级顺序 低 <- 高
-        LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
+        LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX
     }
 
     public Parser(Lexer lexer) {
@@ -46,6 +46,7 @@ public class Parser {
         precedences.put(Token.SLASH, Precedence.PRODUCT);
         precedences.put(Token.ASTERISK, Precedence.PRODUCT);
         precedences.put(Token.LPAREN, Precedence.CALL);
+        precedences.put(Token.LBRACKET, Precedence.INDEX);
 
         // 注册前置解析函数
         prefixParseFns.put(Token.IDENT, this::parseIdentifier);
@@ -58,7 +59,7 @@ public class Parser {
         prefixParseFns.put(Token.IF, this::parseIfExpression);
         prefixParseFns.put(Token.FUNCTION, this::parseFnExpression);
         prefixParseFns.put(Token.STRING, this::parseStringLiteral);
-        prefixParseFns.put(Token.LBRACKET,this::parseArrayLiteral);
+        prefixParseFns.put(Token.LBRACKET,this::parseArrayLiteral);  // 先解析数组字面量
 
         // 注册中指表达式函数
         infixParseFns.put(Token.PLUS, this::parseInfixExpression);
@@ -70,6 +71,7 @@ public class Parser {
         infixParseFns.put(Token.LT, this::parseInfixExpression);
         infixParseFns.put(Token.GT, this::parseInfixExpression);
         infixParseFns.put(Token.LPAREN, this::parseCallExpression);
+        infixParseFns.put(Token.LBRACKET, this::parseIndexExpression);  // 数组索引操作符
     }
 
     private void nextToken() {
@@ -428,6 +430,21 @@ public class Parser {
         }
 
         return list;
+    }
+
+    private Expression parseIndexExpression(Expression left) {
+        IndexExpression indexExpression = new IndexExpression();
+        indexExpression.token = curToken;
+
+        indexExpression.left = left;
+        nextToken();
+        indexExpression.index = parseExpression(Precedence.LOWEST);
+
+        if (!expectPeek(Token.RBRACKET)) {
+            return null;
+        }
+
+        return indexExpression;
     }
 
     private Expression parseStringLiteral() {

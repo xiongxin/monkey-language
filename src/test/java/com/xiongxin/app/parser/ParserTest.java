@@ -202,7 +202,9 @@ public class ParserTest {
     public void testOperatorPrecedenceParsing() {
         List<PrecedenceTest> tests = Arrays.asList(
                 new PrecedenceTest("-a * b", "((-a) * b)"),
-                new PrecedenceTest("!-a", "(!(-a))")
+                new PrecedenceTest("!-a", "(!(-a))"),
+                new PrecedenceTest("!-a", "(!(-a))"),
+                new PrecedenceTest("a * [1, 2, 3, 4][b * c] * d","((a * ([1,2,3,4][(b * c)])) * d)")
         );
 
         tests.forEach( precedenceTest -> {
@@ -347,6 +349,22 @@ public class ParserTest {
         ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
         ArrayLiteral expression = (ArrayLiteral) statement.expression;
         assertEquals("array length", 3, expression.elements.size());
+        System.out.println(expression.toString());
+
+        checkParserError(parser);
+    }
+
+    @Test
+    public void testArrayIndexExpression1() {
+        String input = "myArray[1 + 1]";
+
+        Lexer lexer = new Lexer(input);
+        Parser parser = new Parser(lexer);
+        Program program = parser.parseProgram();
+        assertEquals("statement length", 1, program.statements.size());
+        checkParserError(parser);
+        ExpressionStatement statement = (ExpressionStatement) program.statements.get(0);
+        IndexExpression expression = (IndexExpression) statement.expression;
         System.out.println(expression.toString());
 
         checkParserError(parser);
