@@ -257,4 +257,16 @@ public class EvaluatorTest {
             testIntObj(obj, evalInteger.expected);
         } );
     }
+
+    @Test
+    public void testArrayIndexExpressions() {
+        List<EvalInteger> evalIntegers = Arrays.asList(
+                new EvalInteger("[1,2,3][0]", 1)
+        );
+
+        evalIntegers.forEach( evalInteger -> {
+            Obj obj = testEval(evalInteger.input);
+            testIntObj(obj, evalInteger.expected);
+        } );
+    }
 }

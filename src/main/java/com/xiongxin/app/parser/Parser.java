@@ -403,15 +403,15 @@ public class Parser {
         ArrayLiteral arrayLiteral = new ArrayLiteral();
         arrayLiteral.token = curToken;
 
-        arrayLiteral.elements = parseExpressionList(Token.RBRACKET);
+        arrayLiteral.elements = parseArrayExpressionList();
 
         return arrayLiteral;
     }
 
-    private List<Expression> parseExpressionList(String end) {
+    private List<Expression> parseArrayExpressionList() {
         List<Expression> list = new LinkedList<>();
 
-        if (peekTokenIs(end)) {
+        if (peekTokenIs(Token.RBRACKET)) {
             nextToken();
             return list;
         }
@@ -425,7 +425,7 @@ public class Parser {
             list.add(parseExpression(Precedence.LOWEST));
         }
 
-        if (!expectPeek(end)) {
+        if (!expectPeek(Token.RBRACKET)) {  // eat ]
             return null;
         }
 

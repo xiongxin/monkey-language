@@ -132,7 +132,35 @@ public class Eval {
             }
         }
 
+        if (node instanceof ArrayLiteral) {
+            ArrayObj arrayObj = new ArrayObj();
+
+            arrayObj.elements = evalExpressions(((ArrayLiteral) node).elements, environment);
+
+            if (arrayObj.elements.size() == 1 && isError(arrayObj.elements.get(0))) {
+                return arrayObj.elements.get(0);
+            }
+
+            return arrayObj;
+        }
+
+
+        if (node instanceof IndexExpression) {
+            Obj left = eval(((IndexExpression) node).left, environment);
+            if (isError(left)) return left;
+
+            Obj index = eval(((IndexExpression) node).index, environment);
+            if (isError(index)) return index;
+
+            return evalIndexExpression((ArrayObj) left, (IntObj) index);
+        }
+
         return null;
+    }
+
+    private Obj evalIndexExpression(ArrayObj arrayObj, IntObj intObj) {
+
+        return arrayObj.elements.get(intObj.value);
     }
 
     // 执行函数
